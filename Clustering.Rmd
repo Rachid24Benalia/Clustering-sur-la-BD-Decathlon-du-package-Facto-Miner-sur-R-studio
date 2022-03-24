@@ -1,0 +1,556 @@
+---
+title: "Lab: Clustering"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+description: >
+  ACP.
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(stats)
+#library(FactoMineR)
+library(factoextra)
+#library(corrplot)
+tutorial_options(exercise.timelimit = 60)
+knitr::opts_chunk$set(error = TRUE)
+```
+
+
+## Sommaire :
+__I-	Généralité sur le clustering__        
+    1-	Définition       
+    2-	Synonymes et traduction de clustering            
+    3-	Utilisation du clustering en informatique        
+__II-	Les méthodes de clustering __       
+    1-	Les méthodes hiérarchiques      
+    2-	Les méthodes centroïdes       
+    3-	Les méthodes à densité       
+__III-	Application sur la base de données Decathlon du package Facto Miner sur R studio__       
+__IV-	Conclusion__      
+
+## __Généralité sur le clustering__    
+__Définition:__      
+Le clustering est une méthode d'analyse statistique utilisée pour organiser des données brutes en silos homogènes.  A l'intérieur de chaque grappe, les données sont regroupées selon une caractéristique commune. L'outil d'ordonnancement est un algorithme qui mesure la proximité entre chaque élément à partir de critères définis.
+Pour établir l'équilibre, il minimise l'inertie à l'intérieur des classes et maximise celle entre les sous-groupes afin de bien les différencier. L'objectif peut être de hiérarchiser ou de répartir les données. En français, on emploie couramment le terme de regroupement ou l'expression partitionnement de données.
+
+### __Synonymes et traduction de clustering__
+
+En français, on parle de partitionnement des données, de regroupement des données ou encore de segmentation d'une base de données. 
+En anglais, on peut voir utilisée l'expressions data clustering. 
+
+### __Utilisation du clustering en informatique__
+
+Le clustering sert principalement à segmenter ou classifier une base de données (par exemple trier des données clients type âge, profession exercée, lieu de résidence, etc., pour optimiser la gestion de la relation client) ou extraire des connaissances pour tenter de relever des sous-ensembles de données difficiles à identifier à l’œil nu.
+En référencement naturel, on recourt au clustering pour structurer les mots clés d'un site et créer la base de son tissu sémantique à partir des intentions de recherche collectées sur les pages de résultats des moteurs de recherche. 
+L'imagerie spatiale compresse ses données en organisant sous forme de clusters les différents éléments présents sur chaque image, comme des forêts, des villes ou des zones agricoles par exemple. Cela permet de réduire la taille des paquets de données qui sont, sinon, trop lourds.  
+Pour être appliqué, le clustering s'appuie sur des algorithmes plus ou moins complexes, tels que les algorithmes des k-moyennes ou k-medoids, ou les algorithmes de maximisation de l'espérance.
+
+## __Les méthodes de clustering__
+
+Avant que l’intelligence artificielle des ordinateurs ne devienne capable de détecter des similarités entre individus, ce sont bien des intelligences humaines qui ont implémenté les algorithmes de clustering.
+Il en existe plusieurs dizaines, dont voici plusieurs grandes catégories.
+Pour chaque méthode, il est nécessaire de choisir comment mesurer la similarité entre deux individus – qu’on peut imaginer comme deux points de l’espace des réels en dimension p.
+Il nous faut donc une fonction distance, comme par exemple la distance euclidienne. Les n individus sont des « points » de l’espace de variables R en dimension p.
+
+### __Les méthodes hiérarchiques__    
+
+Les méthodes de clustering de type hiérarchique sont différentes. Elles forment pas à pas des connexions entre individus (pour les méthodes de clustering hiérarchiques ascendantes), et utilisent une matrice de distances entre individus pour trouver le regroupement le plus proche d’un autre.
+En pratique, on part de n ensembles qui sont les individus en tant que singletons. La première connexion se fait donc entre les deux individus les plus proches.
+Pour débuter la deuxième étape, il faut mettre à jour la matrice des distances en enlevant une case, à cause du regroupement de deux individus. Mais comment calculer la distance d’un ensemble à un autre s’il n’est pas un singleton ? C’est justement un des choix à effectuer au départ : la stratégie d’agrégation. Il y en a de multiples, les plus simples étant de choisir la distance minimale entre les individus des deux groupes (single linkage), maximale (complete linkage) ou bien moyenne (average linkage).
+A la fin de cette deuxième étape, on connecte donc les deux groupes les plus proches. Et ainsi de suite pour les étapes suivantes, jusqu’à connecter les deux derniers groupes qui recouvrent tous les individus.
+Les connexions successives se représentent sur un dendrogramme (cf illustration). La distance associée à chaque connexion se trouve sur l’axe y de celui-ci.
+L’algorithme se termine bien sûr par le choix de nos clusters. Là encore, le critère n’est pas unique : on peut en vouloir un nombre précis, ou bien fixer un critère de distance inter-classe. On utilise le dendrogramme pour mettre les clusters en évidence.
+![](https://larevueia.fr/wp-content/uploads/2020/06/hierarch.gif)      
+A gauche, les individus représentés dans R2. A droite, le dendrogramme associé et les étapes de sa création. Si on souhaite deux classes, on choisira (p0,p1,p2) et (p3,p4,p5,p6). Si on souhaite des classes éloignées de plus d’une unité de mesure, on choisira (p0,p1,p2), (p3) et (p4,p5,p6).
+
+### __Les méthodes centroïdes__
+La méthode centroïde la plus classique est la méthode des k-moyennes. Elle ne nécessite qu’un seul choix de départ : k, le nombre de classes voulues.
+On initialise l’algorithme avec k points au hasard parmi les n individus.
+Ces k points représentent alors les k classes dans cette première étape. On associe ensuite chacun des n-k points restants à la « classe-point » qui lui est la plus proche. A la fin de cette première étape, chaque classe est caractérisée par la moyenne des valeurs de chacun de ses individus. On a k moyennes pour k classes.
+La deuxième étape consiste à évaluer la distance de chaque individu à chacune des k moyennes. Certains individus peuvent ici changer de classe. A la fin de cette étape, on actualise les k moyennes. Et on réitère les étapes, jusqu’à ce qu’il y ait convergence pour obtenir nos k clusters finaux.
+Ces classes finales dépendent souvent beaucoup des k individus choisis pour l’initialisation. C’est pourquoi certains algorithmes de k-means itèrent plusieurs fois le processus avec des initialisations différentes, dans le but de garder la partition qui minimise le plus la variance intra-classe (somme des distances entre les individus d’une même classe).
+Les autres algorithmes des méthodes centroïdes peuvent prendre en compte d’autres représentants de classes que la moyenne, comme le médoïde, individu le plus central du groupe.
+![](https://larevueia.fr/wp-content/uploads/2020/06/SoftEnragedHypsilophodon-size_restricted.gif)      
+Les points rouges sont les centres des classes, actualisés à chaque étape. On observe bien le phénomène de convergence de ces 10 centres mobiles.
+
+### __Les méthodes de densité :___    
+Les classes des méthodes à densité correspondent aux zones de densité relativement élevées, c’est-à-dire les zones où beaucoup de points sont proches par rapport à d’autres zones de l’espace R en dimension p (cf illustration).
+La méthode phare de cette catégorie est appelée « density-based spatial clustering of applications with noise », DBSCAN. En plus de former des classes d’individus, l’algorithme repère par la même occasion les valeurs hors du commun que l’on qualifie de bruit. 
+Il prend deux paramètres en entrée : Ɛ la distance maximale qui peut définir deux individus comme voisins, et N le nombre minimal d’individus nécessaires pour former un groupe. A partir de là, l’algorithme est assez intuitif. On aura besoin de stocker deux informations : les clusters successifs et les individus visités au fur et à mesure.
+La première étape consiste à choisir un point parmi les n disponibles. Grâce au paramètre Ɛ, on peut définir le voisinage du point initial, c’est-à-dire l’ensemble des points que l’on peut qualifier comme ses voisins. 
+– Et grâce au paramètre N, on peut dire que si cet ensemble est constitué de moins de N points, alors le point initial correspond à du bruit. On le stocke alors dans les individus visités.
+– A l’inverse si le voisinage comprend plus de N points, alors on peut initialiser un cluster avec le point de départ. On étudie chaque point de son voisinage initial.
+Et pour tout point de ce voisinage, si son propre voisinage comporte plus de N éléments, alors on étend le voisinage initial en le réunissant avec le voisinage du point visité.
+Puis on ajoute ce point dans le cluster. Une fois que tous les points du voisinage ont été testés, ceux retenus dans le cluster sont stockés comme individus visités. Et le cluster obtenu est stocké dans la liste des clusters.
+Tant que tous les individus n’ont pas été visités, on réitère cette étape en commençant par choisir un individu parmi ceux qui sont encore disponibles. Et on obtient finalement notre liste de groupes d’individus ainsi que les individus correspondant à du bruit.
+![](https://larevueia.fr/wp-content/uploads/2020/06/v2-58145667049e230f95e07c3dfbfd31ad_b.gif)      
+L’algorithme DBSCAN pas à pas. Les cercles en mouvement correspondent aux voisinages successifs. Il y a ici 4 zones où la densité est élevée. La forme des clusters s’adapte à la forme des données proposées. Au-delà de ces 3 catégories d’algorithmes, d’autres méthodes moins intuitives existent, comme la maximisation de l’espérance, qui repose sur des outils mathématiques probabilistes.
+Il existe donc une multitude de façons de partitionner la population d’une base de données. Chaque méthode présente ses avantages mais aussi ses limites, selon le type de données à traiter.
+Les méthodes hiérarchiques peuvent être gourmandes en calculs, la méthode des k-moyennes donne des groupes à la forme uniquement convexe, et pour chaque méthode les paramètres d’initialisation ne sont pas forcément optimaux… Sachant cela, l’objectif reste de minimiser les variances intra-classes tout en s’évitant des temps de calcul trop contraignants. Qu’est-ce qu’on ne ferait pas pour obtenir de bons clusters ?
+
+__Pour conclure__, le partitionnement s’avère très utile pour explorer une base de données, mais il sert également à de nombreux domaines. 
+Lorsque les données sont labellisées, on peut aussi faire de la classification avec des réseaux de neurones. Ces méthodes sont beaucoup plus efficaces, surtout lorsque l’on a beaucoup de données. 
+Pour la suite, nous allons appliquer les algorithmes k-means, hierarchical clustering et un algorithme qui les combines sur le jeu de donnée __decathlon2__
+
+
+
+## __Lecture des données__
+
+Télécharger les packages necessaires pour l'analyse       
+
+```{r Load-packages, exercise=TRUE, exercise.eval=TRUE}
+
+```
+
+```{r Load-packages-hint}
+library(stats)  
+library(factoextra)   
+```
+
+Le jeu de données __Decathlon2__ contient des statistiques sur les performances de 27 athléthes durant  10 comptétions: X100m - Long.jump - Shot.put - High.jump - X400m - X110m.hurdle - Pole.vault - Javeline - X1500m - Discus et durant deux types d'évenement: les jeux olympiques et les jeux en Decastar .  
+Il comprend également le rang de chaque athléthe ainsi que ses points par apport à chaque évenement.       
+       
+
+Pour avoir un aperçu sur les données, nous utilisons les fonctions suivantes:  
+    `str()`pour afficher un listing de toutes les variables et de leurs types  
+    `head()` pour afficher les 6 premières lignes  
+    `tail` pour afficher les 6 dernières lignes  
+    `rownames()` pour afficher les noms des lignes  
+    `summary()` pour calculer les statistiques élémentaires
+    
+```{r print-Arrest, exercise=TRUE, exercise.eval=FALSE}
+
+```
+
+```{r print-Arrest-hint}
+data(decathlon2)
+str(decathlon2)
+head(decathlon2)
+tail(decathlon2)
+colnames(decathlon2)
+```
+
+
+## __K-means__
+Commonçons notre analyse avec l'un des méthodes de centroides qui est l'algorithme K-means 
+Les données ne doivent contenir que des variables continues, car l’algorithme k-means utilise des moyennes des variables. Comme nous ne voulons pas que l’algorithme k-means dépende des unités des variables, nous commonçons par standardiser les variables en utilisant la fonction `R` `scale()`:
+
+La fonction R pour faire le clustering par la méthode k-means est `kmeans()` du package `stats`. Taper `?kmeans()` pour plus de détails sur ses paramètres.
+
+```{r help-kmeans, exercise=TRUE, exercise.eval=FALSE}
+
+```
+
+```{r help-kmeans-hint}
+?kmeans()
+```
+
+### __Estimation du nombre optimal de clusters__
+
+Le clustering  k-means nécessite de spécifier apriori le nombre de clusters à générer.        
+
+Une question fondamentale se pose; Comment choisir le bon nombre de clusters (k)?       
+
+Ici, nous proposons une solution simple. L’idée est de calculer k-means clustering en utilisant différentes valeurs de `k`. Ensuite, les WSS (Within Sum of Square) sont dessinés en fonction du nombre de clusters.         
+Le coude dans le graphique est généralement considéré comme un indicateur du nombre approprié de `k`.        
+Pour ce faire:        
+
+ - Standarisons les données par la fonction `sclale(data)`       
+ - utilisons la fonction `fviz_nbclust(data, kmeans, method = ...)` du package `factoextra` sur le jeu de données `decathlon2` et avec `methode="wss"`. (Taper `?fviz_nbclust()` pour plus de détails).
+ 
+## __L'importance du scaling:__
+L'apprentissage automatique, c'est comme faire un jus de fruits mélangé. Si nous voulons obtenir le jus le mieux mélangé, nous devons mélanger tous les fruits non pas en fonction de leur taille mais en fonction de leur juste proportion. Nous devons juste nous rappeler que la pomme et la fraise ne sont pas identiques à moins que nous ne les rendions similaires dans un certain contexte pour comparer leurs attributs. De même, dans de nombreux algorithmes d'apprentissage automatique, pour mettre toutes les fonctionnalités au même niveau, nous devons effectuer une mise à l'échelle afin qu'un nombre significatif n'ait pas d'impact sur le modèle uniquement en raison de leur grande ampleur.
+
+```{r kmeans-k, exercise=TRUE, exercise.eval=FALSE}
+
+```
+
+```{r kmeans-k-hint}
+library(FactoMineR)
+data("decathlon2") # Loading the data set  
+decathlon.active <- decathlon2[1:23, 1:10]
+df <- scale(decathlon.active) # Scaling the data  
+fviz_nbclust(df, kmeans, method = "wss")
+```
+
+Le graphique ci-dessus représente la variance à l’intérieur des clusters. Elle diminue à mesure que `k` augmente. Il faut déterminer le coude de ce grouphe, mais avant __c'est quoi un coude ?__        
+Généralement, le point du coude est celui du nombre de clusters à partir duquel la variance ne se réduit plus significativement.    
+à partir de cette définition on peut dire que le coude notre représentation est définie à k=4.
+      
+
+### __Calcul du clustering k-means __
+
+Comme l’algorithme `k-means` commence par des centroïdes sélectionnés aléatoirement, il est toujours recommandé d’utiliser la fonction `set.seed()` pour définir une référence pour le générateur de nombres aléatoires de R. L’objectif est de rendre les résultats reproductibles, afin d'obtenir exactement les mêmes résultats en cas de réexecution des fonctions.        
+
+Le paramètre `nstart` de la fonction `kmeans` fixe le nombre de différentes affectations aléatoires de départ, avant de sélectionner le meilleur résultat correspondant à la plus faible variation intra-clusters.    
+
+La valeur par défaut de `nstart` dans `kmeans()` est 1. Mais, il est fortement recommandé de calculer k-means clustering avec une grande valeur de `nstart` (25 ou 50), afin d’avoir un résultat plus stable.       
+
+Définisser une valeur de référence pour le générateur des valeurs aléatoires (par ex : set.seed(123)) puis Caculer k-means avec `k = 4` et `nstart = 25`. Afficher le résultat.
+
+```{r kmeans-Arrest, exercise=TRUE, exercise.eval=FALSE}
+
+```
+
+```{r kmeans-Arrest-hint}
+set.seed(123) 
+decathlon.active <- decathlon2[1:23, 1:10]
+df <- scale(decathlon.active)
+km.res <- kmeans(df, 4, nstart = 25)  
+print(km.res) 
+```
+
+Il est judicieux à ce niveau d'examiner les variables originales (decathlon2 au lieu de df) au sein des clusters.       
+utiliser $aggregate(decathlon.active, by=list(cluster=km.res\$cluster), function)$ en remplaçant `fonction` par `mean ou sd`         
+
+Utiliser la fonction `cbind` pour joindre la colonne des clusters `as.factor(km.res$cluster)` au jeu de données `decathlon2`. Nommer ce jeu de données `decathlon2_C`  
+
+Executer la fonction suivante $ggplot(decathlon\_C, aes(y=var,\ fill=cluster)) + geom\_boxplot()$ pour visualiser la distribution de la variables `var` dans chaque clusters. Et ce pour var = `r colnames(decathlon2)`
+
+
+```{r Setup-km}
+set.seed(123) 
+decathlon.active <- decathlon2[1:23, 1:10]
+df <- scale(decathlon.active)
+km.res <- kmeans(df, 4, nstart = 25)  
+```
+
+```{r stat-kmeans-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km"}
+
+```
+
+```{r stat-kmeans-Arrest-hint-1}
+ 
+aggregate(decathlon.active, by=list(cluster=km.res$cluster), mean) 
+aggregate(decathlon.active, by=list(cluster=km.res$cluster), sd) 
+decathlon_C=cbind(decathlon.active, cluster=as.factor(km.res$cluster)) 
+ggplot(decathlon_C, aes(y=Long.jump, fill=cluster)) + geom_boxplot()  
+```
+
+```{r stat-kmeans-Arrest-hint-2}
+
+for(i in c(1:4)){
+     var=colnames(decathlon_C)[i] 
+     print(ggplot(decathlon_C, aes(y=decathlon_C[[i]], fill=cluster)) + 
+     geom_boxplot()+ ylab(var)) 
+     } 
+```
+
+### __Accès aux résultats de la fonction `kmeans()`__   
+
+`kmeans()` retourne une liste de composants, qui comprend:        
+
+ • clusters: vecteur d’entiers indiquant le cluster auquel chaque point est attribué        
+ • centres: Une matrice de centres de clusters (moyennes dans les clusters)       
+ • totss : La somme totale des carrés (TSS), mesure la variance totale        
+ • withinss : Vecteur de la somme des carrés intra-clusters, une valeur par cluster       
+ • tot.withinss : Totale des carrés intra-clusters, c.-à-d. somme(withinss)       
+ • betweenss : la somme des carrés inter-clusters, c.-à-d. totss - tot.withinss       
+ • Taille : Nombre d’observations dans chaque cluster
+ 
+Explorer ces éléments à travers l'opérateur `$`
+
+
+```{r Elts-kmeans-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km"}
+
+```
+```{r stat-kmeans-Arrest-hint-3}
+
+km.res$cluster
+km.res$size
+```
+On observe que SEBRLE, ClAY, BERNARD, Warners, Schwarzl, Pogorelov et Schoenbeck présentent des comportements et des performance proches ainsi que Martineau, Hernu, Barras, NOOL et Bourguignon se regoupe à travers le 4 ème cluster, et Yurkov, Zsivoczky, McMullen, Macey, Hernu, Bernard et Barras se regoupe dans le 1 er cluster et finalement Sebrle, Clay et Kaprov dans le 3 ème cluster.   
+De telle sorte qu'on a 8,7,3,5 comme répartition des individus sur les 4 cluster.
+
+### __Visualisation des clusters produits par `kmeans()`__   
+
+La visualisation des clusters peut être utilisée pour évaluer le choix du nombre de clusters ainsi que pour comparer deux méthodes différentes de clustering.
+
+L'idée est de visualiser les données en nuage de points avec la coloration de chaque point de données en fonction de son affectation aux clusters.
+
+Le problème se pose à ce niveau sur le choix des variables du plan de représentation puisque les données contiennent plus de 2 variables.
+
+Une solution consiste à réduire le nombre de dimensions en appliquant un algorithme de réduction des dimensions, tel que l'ACP, sur les 10 variables et retenir deux nouvelles variables (qui représentent les variables originales) pour faire la représentation graphique.
+
+Pour ce faire, la fonction `fviz_cluster()` du package `factoextra`prend les résultats de k-means et les données originales comme arguments. Puis, elle représente les observations en utilisant les composantes principales si le nombre de variables est supérieur à 2. La fonction permet également de tracer des ellipses de concentration autour de chaque cluster.
+
+
+```{r viz-kmeans-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km"}
+
+```
+
+```{r viz-kmeans-Arrest-hint}
+
+fviz_cluster(km.res, data = df,
+palette = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+ellipse.type = "euclid", # Concentration ellipse
+star.plot = TRUE, # Add segments from centroids to items
+repel = TRUE, # Avoid label overplotting (slow)
+ggtheme = theme_minimal()
+)  
+```
+
+### Conclusion sur la première méthode:
+Pour expliquer la correspondance entre les athléthes du __2 ème clusters__. On peut voir d'aprés cette commande:     
+
+```{r}
+data(decathlon2)
+athlethes_cluster_2= decathlon2[c(1,2,3,16,20,21,22),1:13]
+athlethes_cluster_2
+```
+
+Certe leur rangs et points sont proche par type d'évenement(Olymidade, descarte)      
+Cette simulitude est expliquer par leur résultats trés proches surtout en Long.jump et X100m.     
+
+la correspondance entre les athléthes du __1 er cluster__ . 
+
+```{r}
+data(decathlon2)
+athlethes_cluster_1= decathlon2[c(4,5,6,15,19,23),1:13]
+athlethes_cluster_1
+```
+
+Cette similitude s'explique du fait qu'ils ont des résultats trés proches en Pole.vault et en High_jump se sont dotés avec des verticales intéréssantes    
+
+la correspondance entre les athléthes du __3ème cluster__ .    
+
+```{r}
+data(decathlon2)
+athlethes_cluster_3= decathlon2[c(12,13,14),1:13]
+athlethes_cluster_3
+```
+
+Cette similitude s'explique du fait qu'ils ont des résultats trés proches en X1500m course et plusieurs autre compétitions. En effait ils réprésentent l'éllite des jeux olympiques( les 3 premiers)      
+
+la correspondance entre les athléthes du __4ème cluster__ .      
+
+```{r}
+data(decathlon2)
+athlethes_cluster_4= decathlon2[c(7,8,9,10,11),1:13]
+athlethes_cluster_4
+```
+
+Cette similitude s'explique du fait qu'ils ont des résultats  proches en  plusieurs compétitions. En effait ils réprésentent les athlétes les plus défavorable à gagner dans la compétitions DECASTAR.     
+
+## __Clustering hiérarchique__
+
+La fonction `dist()` permet de calculer la distance entre chaque paire d’observation dans un jeu de données. Les résultats de ce calcul sont appelés matrice de distance ou de dissimilarité.        
+Par défaut, la fonction `dist()` calcule la distance euclidienne entre les observations; cependant, il est possible d’indiquer d’autres métriques en utilisant la méthode argument. Voir `? dist` pour plus d’informations.        
+Revenons au jeu de données `decathlon2`. Calculons la matrice de distance. 
+<!-- Covertir le résultat en matrice par la fonction `as.matrix()` -->
+
+```{r dist-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km"}
+
+```
+
+```{r dist-CH-Arrest-hint}
+# Compute the dissimilarity matrix    
+# df = the standardized data    
+res.dist <- dist(df, method = "euclidean")   
+```
+
+La fonction `hclust()` permet de créer l’arbre hiérarchique à partir de la matrice de distance “res.dist” et une méthode de couplage (linkage). $$ hclust(d = ..., method = ...)$$
+
+ • d: Une structure de dissimilarité telle que produite par la fonction dist().       
+ • Méthode: La méthode d’agglomération (couplage) à utiliser pour calculer la distance entre les clusters. Les valeurs autorisées sont celles de «ward». «D», «ward.D2», «single», «complete», «average», «mcquitty», «median» ou «centroid».       
+ 
+Les méthodes de couplage «complete» et «ward.D2» sont généralement les plus préférées.       
+
+```{r Setup-km2}
+set.seed(123) 
+decathlon.active <- decathlon2[1:23,1:10]
+df <- scale(decathlon.active)
+km.res <- kmeans(df, 4, nstart = 25) 
+res.dist <- dist(df, method = "euclidean") 
+```
+
+```{r hclust-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km2"}
+
+```
+
+```{r hclust-CH-Arrest-hint}
+res.hc <- hclust(d = res.dist, method = "ward.D2")  
+```
+
+### __Dendrogramme__
+
+```{r Setup-km3}
+set.seed(123) 
+decathlon.active <- decathlon2[1:23,1:10]
+df <- scale(decathlon.active)
+km.res <- kmeans(df, 4, nstart = 25) 
+res.dist <- dist(df, method = "euclidean") 
+res.hc <- hclust(d = res.dist, method = "ward.D2") 
+grp <- cutree(res.hc, k = 4)
+```
+
+Nous utilisons la fonction `fviz_dend()` du package `factoextra` pour produire un dendrogramme à partir de `res.hc`.
+
+```{r viz_dend-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km3"}
+
+```
+
+```{r viz_dend-CH-Arrest-hint}
+fviz_dend(res.hc, cex = 0.5)  
+```
+
+Dans le dendrogramme ci-dessus, chaque noeud final correspond à un objet. En remontant l’arbre, les objets qui se ressemblent se combinent en branches, qui sont elles-mêmes fusionnées à une hauteur plus élevée.        
+La hauteur de la fusion, indiquée sur l’axe vertical, indique la (dis)similitude/distance entre deux objets/clusters. Plus la hauteur de la fusion est élevée, moins les objets sont semblables. Cette hauteur est nommée $cophenetic\ distance$ entre les deux objets.
+
+Afin d’identifier les clusters, nous pouvons couper le dendrogramme à une certaine hauteur que nous jugeons appropriée.
+
+### __Vérification de l’arborescence du clustering__
+
+Une façon de mesurer dans quelle mesure l’arbre de cluster généré par la fonction `hclust()` reflète les données est de calculer la corrélation entre les distances cophénétiques ($cophenetic\ distance$) et les données de distance originales générées par la fonction `dist()`. Si le clustering est valide, la liaison des objets (observations) dans l’arbre du cluster devrait avoir une forte corrélation avec les distances entre les objets dans la matrice de distance d’origine.
+
+La fonction `cophenetic()` peut être utilisée pour calculer les distances cophenetic pour la classification hiérarchique.
+
+```{r corr1_dend-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km3"}
+# Compute cophentic distance    
+res.coph <- cophenetic(res.hc)  
+# Correlation between cophenetic distance and the original distance   
+cor(res.dist, res.coph)
+```
+
+Exécutons à nouveau la fonction `hclust()` en utilisant la méthode de liaison/linkage "average ". Ensuite, appelons cophenetic() pour évaluer le clustering obtenu.
+
+```{r corr2_dend-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km3"}
+
+```
+
+```{r corr2_dend-CH-Arrest-hint}
+res.hc2 <- hclust(res.dist, method = "average") 
+
+cor(res.dist, cophenetic(res.hc2)) 
+```
+
+Le coefficient de corrélation montre que l’utilisation d’une méthode de liaison/linkage différente crée un arbre qui représente légèrement mieux les distances initiales.
+
+### __découpage du dendrogramme en clusters__
+
+La fonction `cutree()` permet de découper l'arbre généré par la fonction `hclust()` en plusieurs clusters soit en spécifiant le nombre désiré de clusters ou en spécifiant la hauteur de découpage. La fonction retourne un vecteur contenant le numéro de cluster pour chaque observation.
+
+
+```{r cat_dend-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km3"}
+# Cut tree into 4 groups    
+grp <- cutree(res.hc, k = 4)  
+head(grp, n = 10) 
+# Number of members in each cluster   
+table(grp)  
+# Get the names for the members of cluster 1    
+rownames(df)[grp == 1]
+```
+
+
+Visualisons le résultat du découpage avec la fonction `fviz_dend()` en spécifiant le nombre de clusters à retenir dans l'argument `k =4`.  
+
+
+```{r viz_cut_dend-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km3"}
+
+```
+
+```{r viz_cut_dend-CH-Arrest-hint}
+# Cut in 4 groups and color by groups   
+fviz_dend(res.hc, k = 4, # Cut in four groups
+          cex = 0.5, # label size
+          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+          color_labels_by_k = TRUE, # color labels by groups
+          rect = TRUE # Add rectangle around groups
+          )
+```
+
+En utilisant la fonction `fviz_cluster()`, visualisons le résultat dans un diagramme de dispersion. Les observations doivent être représentées par un nuage de points dans un plan synthétique défini par des composantes principales. 
+
+
+```{r viz_clt_dend-CH-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km3"}
+
+```
+
+```{r viz_clt_dend-CH-Arrest-hint}
+fviz_cluster(list(data = df, cluster = grp),
+             palette = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+             ellipse.type = "convex", # Concentration ellipse
+             repel = TRUE, # Avoid label overplotting (slow)
+             show.clust.cent = FALSE, ggtheme = theme_minimal())
+```
+
+## __Conclusion de la méthode hiérarchique__
+On observe que l'athléthe Warners s'est ajouté au cluster contenant Sebrle, Clay et Karpov.    
+Visualisons pourquoi:    
+
+```{r}
+data(decathlon2)
+athlethes_cluster_3= decathlon2[c(12,13,14),1:13]
+athlethes_cluster_3
+```
+
+Certe cet athlèthe à des résultats trés proche surtout de Kaprov en fait il est aussi parmis les top 5 du OlympicG.      
+
+Les deux athlétes Hernu et Bourguignon s'ajoutent aux deuxième cluster de la méthode K-means et l'athléte Warners quitte ce cluster, cela est dûe au fait qu'on a tolérer une valeur de (Height) supérieur à 3.     
+
+Le reste est presque identique avec la methode K-means.   
+
+
+
+## __Hierarchical K-Means Clustering__
+
+K-means représente l’un des algorithmes de clustering les plus populaires. Cependant, il a quelques limites: il exige que l’utilisateur spécifie le nombre de clusters à l’avance, et sélectionne les centroïdes initiaux aléatoirement. Le résultat du clustering final k-means est très sensible à cette sélection aléatoire initiale des centres des clusters, et peut être (légèrement) différent chaque fois que nous calculons k-means.
+
+k-means clustering hiérarchique (`hkmeans`) est une méthode hybride pour améliorer les résultats de k-means.
+
+L’algorithme `hkmeans` procède comme suit:
+
+ 1. Calculer le clustering hiérarchique et découper l’arbre en k-clusters        
+ 2. Calculer le centre (c.-à-d. la moyenne) de chaque cluster        
+ 3. Calculer k-means en utilisant les centres de clusters (définis à l’étape 2) comme point de départ  
+ 
+```{r hkm-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km3"}
+# Compute hierarchical k-means clustering
+res.hk <-hkmeans(df, 4) 
+# Elements returned by hkmeans()
+names(res.hk) 
+# Print the results
+res.hk
+```
+
+### __Visualisation des résultats de `hkmeans`__
+
+```{r Setup-km4}
+set.seed(123) 
+decathlon.active <- decathlon2[1:23,1:10]
+df <- scale(decathlon.active)
+km.res <- kmeans(df, 4, nstart = 25) 
+res.dist <- dist(df, method = "euclidean") 
+res.hk <-hkmeans(df, 4) 
+```
+
+
+```{r viz_hkm-Arrest, warning=FALSE, exercise=TRUE, exercise.eval=FALSE, exercise.setup="Setup-km4"}
+# Visualize the tree
+fviz_dend(res.hk, cex = 0.6, palette = "jco",rect = TRUE, 
+          rect_border = "jco", rect_fill = TRUE)
+
+# Visualize the hkmeans final clusters
+fviz_cluster(res.hk, palette = "jco", repel = TRUE,
+             ggtheme = theme_classic())
+```
+
+### __Conclusion de la méthode hierarchical k-means__
+Les résultats de cette méthode valide ce que nous avons analyser précédement surtout dans la méthode hiérarchique.       Nous pouvons ajouter que la différence entre faire un clustering avec k=3 ou k=4 n'influent que les atheléthes: NOOL,MARTINEAU,BARRAS,ZSIVOCZKY,Hernu,Barras,YURKOV,Zscivoczky,Bernard,Macey,McMULLEN.    
+Soient ils séparent Macey Bernard, McMULLEN, YURKOV et Zsivoczky du reste soit ils les regroupent tous dans le meme cluster.      
+Ce que nous avons constaté est que le clustering avec k=4 prend en considération la différence dans les compétitions: __Javeline et Shot.put__ pour les athelètes cités précédement.
+
+## Conclusion:
+Les méthodes de clustering comme toutes les autres méthodes de classification , ont leurs
+avantages , faiblesses, cependant , il n’y a pas que le type statistique, il y’en a d’autre type qui s’appuie sur la théorie de probabilité et d'autre basée sur la conception du modèle de mélange, une méthode qui
+a été classé la 5ème parmi les méthodes de classification les plus utilisées/populaires de DATA
+MINING ces dernières années [Xindong &Vipin, 2009] , un classement prouve le succès qu’il
+a commencé à rencontrer très rapidement ce type de méthodes.   
+
+__Merci.__
+
